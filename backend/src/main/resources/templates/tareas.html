@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tareas - TaskVerde</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard.css">
+</head>
+
+<body>
+    <div class="d-flex">
+        <!-- 🟢 Sidebar -->
+        <div class="sidebar">
+            <h4 class="fw-bold text-success">TaskVerde</h4>
+            <a href="/dashboard"><i class="bi bi-speedometer2"></i> Panel</a>
+            <a href="/tareas" class="active"><i class="bi bi-list-task"></i> Tareas</a>
+            <a href="#"><i class="bi bi-check-circle"></i> Completadas</a>
+            <a href="#"><i class="bi bi-hourglass-split"></i> En Progreso</a>
+            <a href="/servicios"><i class="bi bi-clock"></i> Servicios</a>
+            <a href="/equipos"><i class="bi bi-people"></i> Equipo</a>
+            <a href="#"><i class="bi bi-trash"></i> Papelera</a>
+        </div>
+
+        <!-- 🔹 Contenido principal -->
+        <div class="content flex-grow-1">
+
+            <!-- Barra superior -->
+            <nav class="navbar mb-4 px-4 py-2 justify-content-between align-items-center bg-white shadow-sm rounded">
+                <div class="d-flex align-items-center w-50">
+                    <form class="d-flex w-100">
+                        <input class="form-control me-2" type="search" placeholder="Buscar tarea..."
+                            aria-label="Buscar">
+                    </form>
+                </div>
+
+                <div class="dropdown">
+                    <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
+                        id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="text-success fw-semibold me-2" th:text="${nombreUsuario}">Usuario</span>
+                        <img src="https://cdn-icons-png.flaticon.com/512/3177/3177440.png" width="35" height="35"
+                            class="rounded-circle">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownUser">
+                        <li>
+                            <a class="dropdown-item text-danger" href="/login">
+                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-success">Gestión de Tareas</h2>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAgregarTarea">
+                    <i class="bi bi-plus-circle"></i> Agregar tarea
+                </button>
+            </div>
+
+            <!-- Tabla -->
+            <div class="table-responsive bg-white p-3 shadow-sm rounded">
+                <table class="table table-hover align-middle">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Nombre de la tarea</th>
+                            <th>Estado</th>
+                            <th>Servicio</th> <!-- ✅ Nueva columna -->
+                            <th>Asunto</th>
+                            <th>Dirección</th>
+                            <th>Fecha de inicio</th>
+                            <th>Fecha fin</th>
+                            <th>Equipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tarea : ${tareas}">
+                            <td th:text="${tarea.nombre}">Nombre</td>
+                            <td>
+                                <span th:text="${tarea.estado}" th:classappend="${tarea.estado == 'Completada'} ? 'badge bg-success' :
+                                          (${tarea.estado == 'En progreso'} ? 'badge bg-warning text-dark' :
+                                          'badge bg-secondary')">
+                                </span>
+                            </td>
+
+                            <!-- ✅ Nueva celda para mostrar el nombre del servicio -->
+                            <td th:text="${tarea.servicio != null ? tarea.servicio.nombreServicio : 'Sin servicio'}">
+                                Servicio
+                            </td>
+
+                            <td th:text="${tarea.asunto}">Asunto</td>
+                            <td th:text="${tarea.direccion}">Dirección</td>
+                            <td th:text="${tarea.fechaInicio}">Inicio</td>
+                            <td th:text="${tarea.fechaFin}">Fin</td>
+
+                            <!-- ✅ Celda para mostrar el nombre del equipo -->
+                            <td th:text="${tarea.equipo != null ? tarea.equipo.nombre : 'Sin equipo'}">Equipo</td>
+
+                            <td>
+                                <a th:href="@{/tareas/eliminar/{id}(id=${tarea.id})}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+
+                        <!-- Mensaje si no hay tareas -->
+                        <tr th:if="${#lists.isEmpty(tareas)}">
+                            <td colspan="9" class="text-center text-muted">No hay tareas registradas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🟢 Modal Agregar Tarea -->
+    <div class="modal fade" id="modalAgregarTarea" tabindex="-1" aria-labelledby="modalAgregarTareaLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalAgregarTareaLabel">Agregar nueva tarea</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form th:action="@{/tareas/guardar}" th:object="${tarea}" method="post">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nombreTarea" class="form-label">Nombre de la tarea</label>
+                                <input type="text" class="form-control" th:field="*{nombre}" id="nombreTarea" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="estadoTarea" class="form-label">Estado</label>
+                                <select th:field="*{estado}" id="estadoTarea" class="form-select" required>
+                                    <option value="" disabled selected>Seleccione un estado</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="En progreso">En progreso</option>
+                                    <option value="Completada">Completada</option>
+                                </select>
+                            </div>
+
+                            <!-- 🆕 Nueva fila: Servicio (con scroll) y Asunto -->
+                            <div class="col-md-4">
+                                <label for="servicioSelect" class="form-label">Seleccionar servicio</label>
+                                <select id="servicioSelect" name="servicioId" class="form-select" size="5" required
+                                    style="height: 120px; overflow-y: auto;">
+                                    <option value="" disabled selected>Seleccione un servicio</option>
+                                    <option th:each="servicio : ${servicios}" th:value="${servicio.idServicio}"
+                                        th:text="${servicio.nombreServicio}">
+                                    </option>
+                                </select>
+
+                                <!-- Mensaje si no hay servicios -->
+                                <p th:if="${#lists.isEmpty(servicios)}" class="text-muted small mt-1 text-center">
+                                    No hay servicios disponibles
+                                </p>
+                            </div>
+
+                            <div class="col-md-8">
+                                <label for="asuntoTarea" class="form-label">Asunto / Descripción</label>
+                                <textarea th:field="*{asunto}" id="asuntoTarea" class="form-control" rows="4"
+                                    placeholder="Describe brevemente la tarea..." required></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="direccionTarea" class="form-label">Dirección</label>
+                                <input type="text" class="form-control" th:field="*{direccion}" id="direccionTarea"
+                                    required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="fechaInicio" class="form-label">Fecha de inicio</label>
+                                <input type="date" class="form-control" th:field="*{fechaInicio}" id="fechaInicio"
+                                    required>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="fechaFin" class="form-label">Fecha fin</label>
+                                <input type="date" class="form-control" th:field="*{fechaFin}" id="fechaFin" required>
+                            </div>
+
+                            <!-- ✅ Selección de equipo -->
+                            <div class="col-md-6">
+                                <label for="equipoSelect" class="form-label">Equipo asignado</label>
+                                <select id="equipoSelect" name="equipoId" class="form-select" required>
+                                    <option value="" disabled selected>Seleccione un equipo</option>
+                                    <option th:each="equipo : ${equipos}" th:value="${equipo.id}"
+                                        th:text="${equipo.nombre + ' - ' + equipo.lider}">
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer mt-4">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Guardar tarea</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
