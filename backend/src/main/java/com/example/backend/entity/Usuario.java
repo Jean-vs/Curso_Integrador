@@ -22,14 +22,12 @@ public class Usuario {
     private String password;
 
     @Column(length = 20)
-    private String rol = "ADMIN"; // Rol por defecto
+    private String rol = "ADMIN"; 
 
-    // 🔁 Relación inversa: un usuario puede tener muchas tareas
-    @JsonIgnore // evita recursión infinita si se serializa a JSON
+    @JsonIgnore 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tarea> tareas = new ArrayList<>();
 
-    // 🔹 Constructores
     public Usuario() {}
 
     public Usuario(String nombre, String correo, String nombreUsuario, String password) {
@@ -39,7 +37,6 @@ public class Usuario {
         this.password = password;
     }
 
-    // 🔹 Getters y Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -61,13 +58,11 @@ public class Usuario {
     public List<Tarea> getTareas() { return tareas; }
     public void setTareas(List<Tarea> tareas) { this.tareas = tareas; }
 
-    // Método de conveniencia para agregar tareas al usuario
     public void agregarTarea(Tarea tarea) {
         tareas.add(tarea);
         tarea.setUsuario(this);
     }
 
-    // Método de conveniencia para eliminar tareas
     public void eliminarTarea(Tarea tarea) {
         tareas.remove(tarea);
         tarea.setUsuario(null);

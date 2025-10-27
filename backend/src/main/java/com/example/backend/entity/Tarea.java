@@ -19,25 +19,21 @@ public class Tarea {
     private LocalDate fechaInicio;
     private LocalDate fechaFin;
 
-    // 🔹 Relación con Usuario (muchas tareas → un usuario)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Usuario usuario;
 
-    // 🔹 Relación con Equipo (muchas tareas → un equipo)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "equipo_id", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Equipo equipo;
 
-    // 🔹 Nueva relación con Servicio (muchas tareas → un servicio)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_servicio", nullable = false)
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
     private Servicio servicio;
 
-    // 🔹 Constructores
     public Tarea() {
     }
 
@@ -55,7 +51,6 @@ public class Tarea {
         this.servicio = servicio;
     }
 
-    // 🔹 Getters y Setters
     public Long getId() {
         return id;
     }
