@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarea Asignada</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f1f5f2;
+        }
+
+        /* 🌿 NAVBAR */
+        .navbar-lider {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-input {
+            border-radius: 10px;
+            padding: 8px 14px;
+        }
+
+        .search-input:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+        }
+
+        .navbar-lider .btn-outline-success {
+            border-radius: 10px;
+        }
+
+        /* 🌿 CHAT */
+        .chat-box {
+            background: white;
+            border-radius: 10px;
+            height: 380px;
+            overflow-y: auto;
+            padding: 15px;
+            border: 1px solid #b4d1b0;
+        }
+
+        .chat-input input {
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .msg-admin {
+            background: #e7f3e7;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: fit-content;
+            margin-bottom: 8px;
+        }
+
+        .msg-lider {
+            background: #cfe6cf;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-bottom: 8px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="container py-4">
+
+        <!-- 🌿 NAVBAR -->
+        <nav class="navbar mb-4 px-4 py-2 justify-content-between align-items-center bg-white shadow-sm rounded">
+
+            <!-- Buscar -->
+            <div class="d-flex align-items-center w-50">
+                <form class="d-flex w-100">
+                    <input class="form-control me-2" type="search" placeholder="Buscar tarea..." aria-label="Buscar">
+                </form>
+            </div>
+
+            <!-- Usuario -->
+            <div class="dropdown">
+                <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" role="button"
+                    id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
+
+                    <span class="text-success fw-semibold me-2" th:text="${nombreUsuario}">Usuario</span>
+
+                    <img src="https://cdn-icons-png.flaticon.com/512/3177/3177440.png" width="35" height="35"
+                        class="rounded-circle">
+                </a>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="dropdownUser">
+                    <li>
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="bi bi-box-arrow-right me-2"></i> Cerrar sesión
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+
+        </nav>
+
+        <!-- ❗ SI NO TIENE TAREA ASIGNADA -->
+        <div th:if="${tarea == null}" class="text-center mt-5">
+            <h2 class="fw-bold text-danger">No tienes una tarea asignada actualmente</h2>
+            <p class="text-muted">El administrador aún no te ha asignado ninguna tarea.</p>
+        </div>
+
+        <!-- ✔ SI TIENE TAREA → MOSTRAR DETALLE + CHAT -->
+        <div class="row" th:if="${tarea != null}">
+
+            <!-- IZQUIERDA -->
+            <div class="col-md-7">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+
+                        <h3 th:text="${tarea.nombre}" class="fw-bold text-success"></h3>
+                        <hr>
+
+                        <h5 class="fw-bold text-success">Datos de la tarea</h5>
+                        <p><strong>Estado:</strong> <span th:text="${tarea.estado.nombre}"></span></p>
+                        <p><strong>Asunto:</strong> <span th:text="${tarea.asunto}"></span></p>
+                        <p><strong>Dirección:</strong> <span th:text="${tarea.direccion}"></span></p>
+                        <p><strong>Inicio:</strong> <span th:text="${tarea.fechaInicio}"></span></p>
+                        <p><strong>Fin:</strong> <span th:text="${tarea.fechaFin}"></span></p>
+
+                        <hr>
+
+                        <h5 class="fw-bold text-success">Servicio asignado</h5>
+                        <p><strong>Nombre del servicio:</strong>
+                            <span th:text="${tarea.servicio.nombreServicio}"></span>
+                        </p>
+                        <p><strong>Descripción:</strong>
+                            <span th:text="${tarea.servicio.descripcion}"></span>
+                        </p>
+
+                        <hr>
+
+                        <h5 class="fw-bold text-success">Equipo asignado</h5>
+                        <p><strong>Equipo:</strong> <span th:text="${tarea.equipo.nombre}"></span></p>
+
+                        <p><strong>Líder:</strong>
+                            <span th:text="${tarea.equipo.lider.nombres + ' ' + tarea.equipo.lider.apellidos}"></span>
+                        </p>
+
+                        <p><strong>Empleados:</strong></p>
+                        <ul>
+                            <li th:each="emp : ${tarea.equipo.empleados}"
+                                th:text="${emp.nombres + ' ' + emp.apellidos}">
+                            </li>
+                        </ul>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- DERECHA / CHAT -->
+            <!-- DERECHA / CHAT -->
+            <div class="col-md-5">
+                <h4 class="text-success">Chat con el Admin</h4>
+
+                <div class="chat-box shadow-sm bg-white" style="
+        height: 500px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+    ">
+                    <!-- Mensajes -->
+                    <div class="chat-messages" id="chatMessages" style="
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        ">
+                        <p class="text-muted">No hay mensajes aún.</p>
+                    </div>
+
+                    <!-- Input -->
+                    <div class="chat-input" style="
+            border-top: 1px solid #ccc;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        ">
+                        <input type="text" id="mensaje" class="form-control" placeholder="Escribe un mensaje...">
+                        <button class="btn btn-success" onclick="enviarMensaje()">Enviar</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        let tareaId = /*[[${tarea != null ? tarea.id : 0}]]*/ 0;
+        let idUsuario = /*[[${idUsuario}]]*/ 0;
+    </script>
+
+    <script>
+        let stompClient = null;
+        let reconnectTimeout = null;
+
+        // ============================
+        // 📥 CARGAR HISTORIAL (LÍDER)
+        // ============================
+        function cargarHistorial() {
+            if (!tareaId || tareaId === 0) {
+                console.warn("⚠️ cargarHistorial: tareaId inválido:", tareaId);
+                return;
+            }
+
+            console.log("📥 Cargando historial para tarea:", tareaId);
+
+            fetch(`/tarea/${tareaId}/mensajes`)
+                .then(res => {
+                    if (!res.ok) throw new Error("HTTP error " + res.status);
+                    return res.json();
+                })
+                .then(lista => {
+                    const cont = document.getElementById("chatMessages");
+                    cont.innerHTML = ""; // limpiamos
+
+                    if (!Array.isArray(lista) || lista.length === 0) {
+                        cont.innerHTML = `<p class="text-muted">No hay mensajes aún.</p>`;
+                        return;
+                    }
+
+                    lista.forEach(data => {
+                        // asegurar estructura mínima
+                        const emisor = data.emisor || "LIDER";
+                        const contenido = data.contenido || "";
+
+                        const div = document.createElement("div");
+                        div.className = (emisor === "ADMIN") ? "msg-admin" : "msg-lider";
+                        div.innerHTML = `<strong>${emisor}:</strong> ${contenido}`;
+                        cont.appendChild(div);
+                    });
+
+                    cont.scrollTop = cont.scrollHeight;
+                    console.log("✅ Historial cargado, mensajes:", lista.length);
+                })
+                .catch(err => {
+                    console.error("❌ Error cargando historial:", err);
+                });
+        }
+
+        // ============================
+        // 🔌 CONEXIÓN AL CHAT (LÍDER)
+        // ============================
+        function conectarChat() {
+            if (!tareaId || tareaId === 0) {
+                console.warn("⚠️ No hay tarea seleccionada para iniciar el chat.");
+                return;
+            }
+
+            const socket = new SockJS('/chat-websocket');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function () {
+                console.log("📡 LIDER conectado al chat. Suscribiendo a /topic/tarea/" + tareaId);
+
+                // Suscribirse al topic de la tarea
+                stompClient.subscribe('/topic/tarea/' + tareaId, function (mensaje) {
+                    try {
+                        const data = JSON.parse(mensaje.body);
+                        mostrarMensaje(data);
+                    } catch (e) {
+                        console.error("Error parseando mensaje WS:", e, mensaje);
+                    }
+                });
+
+                // Cargar historial una vez conectado (para evitar race conditions)
+                cargarHistorial();
+
+            }, function (error) {
+                console.error("❌ Error de conexión del LÍDER, reintentando en 3s...", error);
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(conectarChat, 3000);
+            });
+        }
+
+        // ============================
+        // 💬 MOSTRAR MENSAJE
+        // ============================
+        function mostrarMensaje(data) {
+            const cont = document.getElementById("chatMessages");
+
+            if (cont.firstElementChild && cont.firstElementChild.classList.contains("text-muted")) {
+                cont.innerHTML = "";
+            }
+
+            const emisor = data.emisor || "LIDER";
+            const contenido = data.contenido || "";
+
+            const div = document.createElement("div");
+            div.className = (emisor === "ADMIN") ? "msg-admin" : "msg-lider";
+            div.innerHTML = `<strong>${emisor}:</strong> ${contenido}`;
+            cont.appendChild(div);
+
+            cont.scrollTop = cont.scrollHeight;
+        }
+
+        // ============================
+        // 📤 ENVIAR MENSAJE
+        // ============================
+        function enviarMensaje() {
+            const contenido = document.getElementById("mensaje").value.trim();
+            if (!contenido) return;
+
+            const payload = {
+                tareaId: tareaId,
+                usuarioId: idUsuario,
+                contenido: contenido
+            };
+
+            if (!stompClient || !stompClient.connected) {
+                console.warn("⚠️ No conectado al servidor WS. Intentando reconectar...");
+                conectarChat();
+                // pequeño delay para que la conexión se establezca antes de intentar enviar
+                setTimeout(() => {
+                    if (stompClient && stompClient.connected) {
+                        stompClient.send("/app/enviarMensaje", {}, JSON.stringify(payload));
+                    } else {
+                        console.error("❌ No se pudo enviar: sigue sin conexión.");
+                    }
+                }, 600);
+            } else {
+                stompClient.send("/app/enviarMensaje", {}, JSON.stringify(payload));
+            }
+
+            document.getElementById("mensaje").value = "";
+        }
+
+        // ============================
+        // 🚀 INICIAR CHAT
+        // ============================
+        if (tareaId && tareaId !== 0) {
+            conectarChat();
+        } else {
+            console.warn("Chat no iniciado porque no hay tarea asignada al líder.");
+        }
+    </script>
+
+
+
+
+</body>
+
+</html>

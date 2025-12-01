@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Tarea</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        .chat-box {
+            height: 500px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .chat-input {
+            border-top: 1px solid #ccc;
+            padding: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .msg-admin {
+            background: #e7f3e7;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: fit-content;
+            margin-bottom: 8px;
+        }
+
+        .msg-lider {
+            background: #cfe6cf;
+            padding: 8px 12px;
+            border-radius: 10px;
+            width: fit-content;
+            margin-left: auto;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="d-flex">
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <img src="/img/logo.png" class="sidebar-logo">
+                <h4 class="fw-bold text-success">Limpieza Corp.</h4>
+            </div>
+
+            <a href="/dashboard"><i class="bi bi-speedometer2"></i> Panel</a>
+            <a href="/tareas" class="active"><i class="bi bi-list-task"></i> Tareas</a>
+            <a href="/servicios"><i class="bi bi-clock"></i> Servicios</a>
+            <a href="/equipos"><i class="bi bi-people"></i> Equipo</a>
+            <a href="/empleados"><i class="bi bi-people"></i> Empleados</a>
+        </div>
+
+        <!-- Contenido -->
+        <div class="content flex-grow-1 p-4">
+
+            <button class="btn btn-outline-success mb-3" onclick="window.location.href='/tareas'">
+                <i class="bi bi-arrow-left"></i> Volver a tareas
+            </button>
+
+            <h2 class="fw-bold text-success mb-4">Detalle de la tarea</h2>
+
+            <div class="row">
+
+                <!-- IZQUIERDA: CUADRO ÚNICO -->
+                <div class="col-md-7">
+
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body">
+
+                            <!-- TITULO -->
+                            <h3 th:text="${tarea.nombre}" class="fw-bold text-success"></h3>
+                            <hr>
+
+                            <!-- DATOS PRINCIPALES -->
+                            <h5 class="fw-bold text-success">Datos de la tarea</h5>
+
+                            <p><strong>Estado:</strong> <span th:text="${tarea.estado.nombre}"></span></p>
+                            <p><strong>Asunto:</strong> <span th:text="${tarea.asunto}"></span></p>
+                            <p><strong>Dirección:</strong> <span th:text="${tarea.direccion}"></span></p>
+                            <p><strong>Inicio:</strong> <span th:text="${tarea.fechaInicio}"></span></p>
+                            <p><strong>Fin:</strong> <span th:text="${tarea.fechaFin}"></span></p>
+
+                            <hr>
+
+                            <!-- SERVICIO -->
+                            <h5 class="fw-bold text-success">Servicio asignado</h5>
+
+                            <p><strong>Nombre del servicio:</strong>
+                                <span th:text="${tarea.servicio.nombreServicio}"></span>
+                            </p>
+
+                            <p><strong>Descripción:</strong>
+                                <span th:text="${tarea.servicio.descripcion}"></span>
+                            </p>
+
+                            <hr>
+
+                            <!-- EQUIPO -->
+                            <h5 class="fw-bold text-success">Equipo asignado</h5>
+
+                            <p><strong>Equipo:</strong>
+                                <span th:text="${tarea.equipo.nombre}"></span>
+                            </p>
+
+                            <p><strong>Líder:</strong>
+                                <span
+                                    th:text="${tarea.equipo.lider.nombres + ' ' + tarea.equipo.lider.apellidos}"></span>
+                            </p>
+
+                            <p><strong>Empleados:</strong></p>
+                            <ul>
+                                <li th:each="emp : ${tarea.equipo.empleados}"
+                                    th:text="${emp.nombres + ' ' + emp.apellidos}"></li>
+                            </ul>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- DERECHA: CHAT -->
+                <!-- DERECHA: CHAT -->
+                <div class="col-md-5">
+
+                    <h4 class="text-success">Chat con el Líder</h4>
+
+                    <div class="chat-box shadow-sm bg-white" style="
+        background: white;
+        border-radius: 10px;
+        height: 380px;
+        overflow-y: auto;
+        padding: 15px;
+        border: 1px solid #b4d1b0;
+    ">
+                        <div class="chat-messages" id="chatMessages">
+                            <p class="text-muted">No hay mensajes aún.</p>
+                        </div>
+
+                        <div class="chat-input mt-2">
+                            <input type="text" id="mensaje" class="form-control" placeholder="Escribe un mensaje..."
+                                style="border-radius: 8px; margin-bottom: 8px;">
+                            <button class="btn btn-success w-100" onclick="enviarMensaje()">Enviar</button>
+                        </div>
+                    </div>
+
+                </div>
+
+
+            </div>
+
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        let tareaId = /*[[${tarea != null ? tarea.id : 0}]]*/ 0;
+        let idUsuario = /*[[${idUsuario}]]*/ 0;
+    </script>
+
+    <script>
+        let stompClient = null;
+        let reconnectTimeout = null;
+
+        // ============================
+        // 📥 CARGAR HISTORIAL GUARDADO
+        // ============================
+        function cargarHistorial() {
+
+            fetch(`/tarea/${tareaId}/mensajes`)
+                .then(response => response.json())
+                .then(lista => {
+
+                    const cont = document.getElementById("chatMessages");
+                    cont.innerHTML = ""; // Limpia todo
+
+                    if (lista.length === 0) {
+                        cont.innerHTML = `<p class="text-muted">No hay mensajes aún.</p>`;
+                        return;
+                    }
+
+                    lista.forEach(data => {
+                        const div = document.createElement("div");
+                        div.className = (data.emisor === "ADMIN") ? "msg-admin" : "msg-lider";
+                        div.innerHTML = `<strong>${data.emisor}:</strong> ${data.contenido}`;
+                        cont.appendChild(div);
+                    });
+
+                    cont.scrollTop = cont.scrollHeight;
+                })
+                .catch(err => console.error("❌ Error cargando historial:", err));
+        }
+
+        // ============================
+        // 🔌 CONEXIÓN AL CHAT
+        // ============================
+        function conectarChat() {
+
+            if (!tareaId || tareaId === 0) {
+                console.warn("⚠️ No hay tarea seleccionada para el chat.");
+                return;
+            }
+
+            const socket = new SockJS('/chat-websocket');
+            stompClient = Stomp.over(socket);
+
+            stompClient.connect({}, function () {
+
+                console.log("📡 ADMIN conectado al chat.");
+
+                stompClient.subscribe('/topic/tarea/' + tareaId, function (mensaje) {
+                    const data = JSON.parse(mensaje.body);
+                    mostrarMensaje(data);
+                });
+
+            }, function (error) {
+
+                console.error("❌ Error de conexión. Reintentando en 3s...", error);
+
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(conectarChat, 3000);
+            });
+        }
+
+        // ============================
+        // 💬 MOSTRAR MENSAJES EN PANTALLA
+        // ============================
+        function mostrarMensaje(data) {
+
+            const cont = document.getElementById("chatMessages");
+
+            if (cont.firstElementChild && cont.firstElementChild.classList.contains("text-muted")) {
+                cont.innerHTML = "";
+            }
+
+            const div = document.createElement("div");
+            div.className = (data.emisor === "ADMIN") ? "msg-admin" : "msg-lider";
+            div.innerHTML = `<strong>${data.emisor}:</strong> ${data.contenido}`;
+            cont.appendChild(div);
+
+            cont.scrollTop = cont.scrollHeight;
+        }
+
+        // ============================
+        // 📤 ENVIAR MENSAJE
+        // ============================
+        function enviarMensaje() {
+
+            const contenido = document.getElementById("mensaje").value.trim();
+            if (contenido === "") return;
+
+            const mensaje = {
+                tareaId: tareaId,
+                usuarioId: idUsuario,
+                contenido: contenido
+            };
+
+            if (!stompClient || !stompClient.connected) {
+                console.warn("⚠️ ADMIN no conectado. Reconectando...");
+                conectarChat();
+                return;
+            }
+
+            stompClient.send("/app/enviarMensaje", {}, JSON.stringify(mensaje));
+
+            document.getElementById("mensaje").value = "";
+        }
+
+        // ============================
+        // 🚀 INICIAR CHAT AL CARGAR
+        // ============================
+        cargarHistorial();  // ← Primero cargamos mensajes guardados
+        conectarChat();     // ← Después conectamos websocket
+
+    </script>
+
+
+
+
+
+</body>
+
+</html>
