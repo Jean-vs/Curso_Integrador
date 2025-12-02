@@ -3,8 +3,7 @@ package com.example.sistema_tareas.controller;
 import com.example.sistema_tareas.model.Usuario;
 import com.example.sistema_tareas.service.UsuarioService;
 
-import java.security.Principal;
-
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,41 +27,49 @@ public class LoginController {
             @RequestParam String password,
             Model model) {
 
-        return usuarioService.buscarPorUsuario(nombreUsuario)
-                .map(usuario -> {
-                    if (usuarioService.passwordCoincide(password, usuario.getPassword())) {
-                        return "redirect:/dashboard";
-                    } else {
-                        model.addAttribute("error", "Contraseña incorrecta");
-                        return "login";
-                    }
-                })
-                .orElseGet(() -> {
-                    model.addAttribute("error", "Usuario no encontrado");
-                    return "login";
-                });
+        Optional<Usuario> usuarioOpt = usuarioService.buscarPorUsuario(nombreUsuario);
+
+        // Si no lo encuentra por nombreUsuario, buscar por correo
+        if (usuarioOpt.isEmpty()) {
+            usuarioOpt = usuarioService.buscarPorCorreo(nombreUsuario);
+        }
+
+        if (usuarioOpt.isEmpty()) {
+            model.addAttribute("error", "Usuario o correo no encontrado");
+            return "login";
+        }
+
+        Usuario usuario = usuarioOpt.get();
+
+        // Validar contraseña
+        if (!usuarioService.passwordCoincide(password, usuario.getPassword())) {
+            model.addAttribute("error", "Contraseña incorrecta");
+            return "login";
+        }
+
+        // Redirección por rol
+        if (usuario.getRol().equalsIgnoreCase("ADMIN")) {
+            return "redirect:/admin/dashboard";
+        }
+
+        if (usuario.getRol().equalsIgnoreCase("LIDER")) {
+            return "redirect:/lider/dashboard";
+        }
+
+        model.addAttribute("error", "Rol no válido");
+        return "login";
     }
 
-    @GetMapping("/dashboard")
-    public String mostrarDashboard(Model model, Principal principal) {
-        if (principal != null) {
-            String nombreUsuario = principal.getName(); // obtiene el usuario autenticado
-            model.addAttribute("nombreUsuario", nombreUsuario);
-        }
-        return "dashboard"; // nombre del HTML que muestra tu dashboard
+    // Vista del dashboard admin
+    @GetMapping("/admin/dashboard")
+    public String mostrarDashboard(Model model) {
+        return "dashboard";
     }
 
-    /*@Controller
-    public class TareasController {
-
-        @GetMapping("/tareas")
-        public String mostrarTareas(Model model, Principal principal) {
-            if (principal != null) {
-                String nombreUsuario = principal.getName();
-                model.addAttribute("nombreUsuario", nombreUsuario);
-            }
-            return "tareas";
-        }
-    }*/
+    // Vista del dashboard para líderes
+    @GetMapping("/lider/dashboard")
+    public String mostrarDashboardLider(Model model) {
+        return "dashboard_lider"; // crea este HTML luego
+    }
 
 }
